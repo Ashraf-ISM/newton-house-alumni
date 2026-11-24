@@ -47,7 +47,6 @@ import {
 } from "@/app/actions/community";
 import { submitAchievementNomination } from "@/app/actions/public";
 import { ActionButton } from "@/components/admin/action-button";
-import { Portrait } from "@/components/alumni/portrait";
 import { UpdatePasswordForm } from "@/components/forms/auth-forms";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";

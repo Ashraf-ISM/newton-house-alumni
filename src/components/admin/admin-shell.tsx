@@ -1,6 +1,26 @@
 "use client";
 
-import { Award, CalendarDays, Images, Inbox, LayoutDashboard, LogOut, Mail, Megaphone, Menu, ShieldCheck, Users, X, ExternalLink } from "lucide-react";
+import {
+  Archive,
+  Award,
+  BookOpenText,
+  CalendarDays,
+  GraduationCap,
+  Handshake,
+  Images,
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  Megaphone,
+  Menu,
+  Settings,
+  ShieldCheck,
+  UserCog,
+  Users,
+  X,
+  ExternalLink,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -11,11 +31,17 @@ import { Toaster } from "./toaster";
 
 const nav = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/alumni", label: "Alumni", icon: Users },
-  { href: "/admin/events", label: "Events", icon: CalendarDays },
-  { href: "/admin/achievements", label: "Achievements", icon: Award },
-  { href: "/admin/gallery", label: "Gallery", icon: Images },
+  { href: "/admin/alumni", label: "Alumni Management", icon: Users },
+  { href: "/admin/batches", label: "Batch Management", icon: GraduationCap },
+  { href: "/admin/stories", label: "Story Management", icon: BookOpenText },
+  { href: "/admin/archive", label: "Archive Management", icon: Archive },
+  { href: "/admin/achievements", label: "Achievement Management", icon: Award },
+  { href: "/admin/events", label: "Event Management", icon: CalendarDays },
+  { href: "/admin/mentorship", label: "Mentorship Management", icon: Handshake },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+  { href: "/admin/roles", label: "User Roles", icon: UserCog },
+  { href: "/admin/settings", label: "Site Settings", icon: Settings },
+  { href: "/admin/gallery", label: "Memories Gallery", icon: Images },
   { href: "/admin/subscribers", label: "Newsletter", icon: Mail },
   { href: "/admin/messages", label: "Messages", icon: Inbox },
 ];
@@ -34,7 +60,7 @@ export function AdminShell({ children, email, demo, pendingCount }: { children: 
           <span className="block font-label text-[0.6rem] tracking-[0.2em] text-gold/80">ADMIN</span>
         </span>
       </Link>
-      <nav aria-label="Admin" className="mt-2 flex-1 space-y-0.5 px-3">
+      <nav aria-label="Admin" className="mt-2 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
         {nav.map((n) => (
           <Link
             key={n.href}

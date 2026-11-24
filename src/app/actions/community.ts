@@ -27,7 +27,7 @@ import {
   updateSiteSettings,
 } from "@/lib/data/community";
 import { store } from "@/lib/data/store";
-import { ACCEPTED_IMAGE_TYPES, fileFrom, MAX_UPLOAD_BYTES, storeImage, validateImageFile } from "@/lib/storage";
+import { ACCEPTED_IMAGE_TYPES, fileFrom, storeImage, validateImageFile } from "@/lib/storage";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import type {

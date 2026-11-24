@@ -5,7 +5,6 @@ import {
   CalendarDays,
   GraduationCap,
   MapPin,
-  MessageSquareQuote,
   Users,
 } from "lucide-react";
 import type { Metadata } from "next";

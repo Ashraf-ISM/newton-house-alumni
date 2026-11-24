@@ -21,7 +21,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { submitArchiveItemAction } from "@/app/actions/community";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { FormStatus } from "@/components/ui/form-status";
 import { SubmitButton } from "@/components/ui/submit-button";

@@ -37,11 +37,31 @@ export default async function AdminAlumniEdit({ params }: { params: Promise<{ id
           <Panel title="Moderation">
             <div className="space-y-4 p-6">
               <p className="text-sm">
-                Status: <Badge variant={a.status === "approved" ? "success" : a.status === "pending" ? "warning" : "danger"}>{a.status}</Badge>
+                Status:{" "}
+                <Badge
+                  variant={
+                    a.status === "approved"
+                      ? "success"
+                      : a.status === "pending" || a.status === "info_required"
+                        ? "warning"
+                        : "danger"
+                  }
+                >
+                  {a.status === "info_required" ? "Additional Info Required" : a.status}
+                </Badge>
               </p>
+              {a.reviewedBy ? (
+                <p className="text-xs text-muted-strong">
+                  Reviewed by <span className="font-medium text-ink">{a.reviewedBy}</span>
+                  {a.reviewedAt ? ` on ${formatDate(a.reviewedAt)}` : ""}
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 <ActionButton size="sm" variant="navy" disabled={a.status === "approved"} action={setAlumniStatus.bind(null, a.id, "approved")}>
                   Approve
+                </ActionButton>
+                <ActionButton size="sm" variant="outline" disabled={a.status === "info_required"} action={setAlumniStatus.bind(null, a.id, "info_required")}>
+                  Request additional info
                 </ActionButton>
                 <ActionButton size="sm" variant="outline" disabled={a.status === "rejected"} action={setAlumniStatus.bind(null, a.id, "rejected")}>
                   Reject

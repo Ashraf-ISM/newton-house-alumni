@@ -12,10 +12,16 @@ export const metadata = { title: "Alumni" };
 const tabs: { key: AlumniStatus | "all"; label: string }[] = [
   { key: "pending", label: "Pending" },
   { key: "approved", label: "Approved" },
+  { key: "info_required", label: "Info Required" },
   { key: "rejected", label: "Rejected" },
   { key: "all", label: "All" },
 ];
-const badge = { pending: "warning", approved: "success", rejected: "danger" } as const;
+const badge: Record<AlumniStatus, "warning" | "success" | "danger"> = {
+  pending: "warning",
+  approved: "success",
+  info_required: "warning",
+  rejected: "danger",
+};
 
 export default async function AdminAlumniPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
@@ -80,13 +86,20 @@ export default async function AdminAlumniPage({ searchParams }: { searchParams: 
                 <td className="text-muted-strong">{a.email}</td>
                 <td className="capitalize text-muted-strong">{a.visibility}</td>
                 <td>
-                  <Badge variant={badge[a.status]}>{a.status}</Badge>
+                  <Badge variant={badge[a.status]}>
+                    {a.status === "info_required" ? "Info Required" : a.status}
+                  </Badge>
                 </td>
                 <td>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     {a.status !== "approved" ? (
                       <ActionButton size="sm" variant="navy" action={setAlumniStatus.bind(null, a.id, "approved")}>
                         Approve
+                      </ActionButton>
+                    ) : null}
+                    {a.status !== "info_required" ? (
+                      <ActionButton size="sm" variant="outline" action={setAlumniStatus.bind(null, a.id, "info_required")}>
+                        Request Info
                       </ActionButton>
                     ) : null}
                     {a.status !== "rejected" ? (
