@@ -32,6 +32,12 @@ const statusCopy = {
     label: "Not approved",
     body: "We could not verify your registration. Please contact the Association if you believe this is a mistake.",
   },
+  info_required: {
+    icon: Clock,
+    badge: "warning" as const,
+    label: "Additional Information Required",
+    body: "Please review and complete your profile details below so the Association can complete verification.",
+  },
 };
 
 export default async function PortalPage({
@@ -100,6 +106,12 @@ export default async function PortalPage({
               </div>
               <p className="mt-3 break-all text-sm font-medium text-ink">{viewer.email}</p>
               <div className="mt-5 flex flex-col gap-2">
+                <Link
+                  href="/member/dashboard"
+                  className={cn(buttonVariants({ variant: "gold", size: "sm" }), "justify-start")}
+                >
+                  <LayoutDashboard aria-hidden /> Full Member Dashboard
+                </Link>
                 <Link
                   href="/portal/password"
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "justify-start")}

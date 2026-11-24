@@ -10,7 +10,7 @@ import { isSupabaseConfigured } from "./config";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const path = request.nextUrl.pathname;
-  const isPortal = path.startsWith("/portal");
+  const isPortal = path.startsWith("/portal") || path.startsWith("/member");
   const isAdmin = path.startsWith("/admin");
   const isProtected = isPortal || isAdmin;
 

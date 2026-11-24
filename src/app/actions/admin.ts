@@ -44,9 +44,16 @@ async function storageClient() {
 export async function setAlumniStatus(id: string, status: AlumniStatus): Promise<ActionResult> {
   try {
     const admin = await assertAdmin();
-    await adminSetStatus(id, status, admin.demo ? null : admin.userId);
-    refreshPublic("/alumni", "/admin/alumni");
-    const verb = status === "approved" ? "approved" : status === "rejected" ? "rejected" : "returned to pending";
+    await adminSetStatus(id, status, admin.demo ? null : admin.userId, admin.email ?? "admin@newtonhouse.org");
+    refreshPublic("/alumni", "/alumni/batches", "/admin/alumni", "/member/dashboard");
+    const verb =
+      status === "approved"
+        ? "approved"
+        : status === "rejected"
+          ? "rejected"
+          : status === "info_required"
+            ? "marked as requiring additional information"
+            : "returned to pending";
     return { ok: true, message: `Registration ${verb}.` };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Action failed." };
