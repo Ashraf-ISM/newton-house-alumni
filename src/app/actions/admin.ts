@@ -10,6 +10,7 @@ import {
   deleteAchievement,
   deleteAnnouncement,
   deleteGalleryItem,
+  setAchievementApproval,
   setAnnouncementPublished,
   setGalleryPublished,
   upsertAchievement,
@@ -196,6 +197,17 @@ export async function removeAchievement(id: string): Promise<ActionResult> {
     await deleteAchievement(id);
     refreshPublic("/achievements", "/admin/achievements");
     return { ok: true, message: "Profile deleted." };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Action failed." };
+  }
+}
+
+export async function approveAchievement(id: string): Promise<ActionResult> {
+  try {
+    await assertAdmin();
+    await setAchievementApproval(id, { verified: true, published: true });
+    refreshPublic("/achievements", "/admin/achievements");
+    return { ok: true, message: "Achievement verified and published." };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Action failed." };
   }

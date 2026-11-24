@@ -174,6 +174,39 @@ export const achievementSchema = z.object({
   isSample: checkbox,
 });
 
+/* ---------------- Public achievement submission ---------------- */
+export const achievementSubmissionSchema = z.object({
+  name: z.string().trim().min(3, "Enter the alumnus's full name.").max(120),
+  submitterEmail: email,
+  graduationYear: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim().length ? Number(v.trim()) : null))
+    .refine((v) => v === null || (Number.isInteger(v) && v >= 1920 && v <= currentYear + 6), "Enter a valid four-digit graduation year."),
+  department: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.length ? v : null))
+    .refine((v) => v === null || (departments as string[]).includes(v), "Choose a valid department."),
+  category: z.enum(
+    [
+      "academics-research",
+      "government-public-service",
+      "science-technology",
+      "corporate-leadership",
+      "entrepreneurship",
+      "other",
+    ],
+    { error: "Select an achievement category." },
+  ),
+  designation: z.string().trim().min(2, "Enter the professional designation or role.").max(140),
+  organisation: z.string().trim().min(2, "Enter the organisation or institution.").max(140),
+  summary: z.string().trim().min(15, "Provide a concise citation (at least 15 characters).").max(280),
+  biography: z.string().trim().max(4000).optional().default(""),
+  consent: checkbox.refine((v) => v, "Please confirm that this submission is accurate and may be verified by the Association."),
+  website: z.string().max(0).optional(), // honeypot
+});
+
 /* ---------------- Admin: gallery & announcements ---------------- */
 export const galleryItemSchema = z.object({
   title: z.string().trim().min(2, "Enter a title.").max(120),

@@ -77,18 +77,12 @@ export function JoinForm({ requiresPassword, demo }: { requiresPassword: boolean
           ))}
         </ol>
         <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/alumni" className={cn(buttonVariants({ variant: "navy" }))}>
-            Browse the directory
+          <Link href="/login" className={cn(buttonVariants({ variant: "navy" }))}>
+            Go to Sign In
           </Link>
-          {demo ? (
-            <Link href="/admin/alumni" className={cn(buttonVariants({ variant: "outline" }))}>
-              Review in admin dashboard
-            </Link>
-          ) : (
-            <Link href="/" className={cn(buttonVariants({ variant: "outline" }))}>
-              Return home
-            </Link>
-          )}
+          <Link href="/alumni" className={cn(buttonVariants({ variant: "outline" }))}>
+            Browse public directory
+          </Link>
         </div>
       </m.div>
     );

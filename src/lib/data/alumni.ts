@@ -106,8 +106,12 @@ function fromAlumniRow(r: AlumniRow): AlumniRecord {
   };
 }
 
-/** Strip private fields so a full record can be safely sent to the browser. */
-export function toPublicProfile(r: AlumniRecord): AlumniProfile {
+/**
+ * Strip private fields so a full record can be safely sent to the browser.
+ * Contact & social links (`publicEmail`, `linkedinUrl`) are only exposed to
+ * signed-in approved members (and `publicEmail` additionally requires `showEmail` consent).
+ */
+export function toPublicProfile(r: AlumniRecord, viewerIsMember = false): AlumniProfile {
   return {
     id: r.id,
     slug: r.slug,
@@ -119,11 +123,11 @@ export function toPublicProfile(r: AlumniRecord): AlumniProfile {
     city: r.city,
     country: r.country,
     profession: r.profession,
-    linkedinUrl: r.linkedinUrl,
+    linkedinUrl: viewerIsMember ? r.linkedinUrl : null,
     photoUrl: r.photoUrl,
     bio: r.bio,
     visibility: r.visibility,
-    publicEmail: r.showEmail ? r.email : null,
+    publicEmail: viewerIsMember && r.showEmail ? r.email : null,
     status: r.status,
     isSample: r.isSample,
     createdAt: r.createdAt,
@@ -161,7 +165,7 @@ export async function listDirectory(opts: { viewerIsMember: boolean }): Promise<
         a.status === "approved" &&
         (a.visibility === "public" || (opts.viewerIsMember && a.visibility === "members")),
     )
-    .map(toPublicProfile)
+    .map((a) => toPublicProfile(a, opts.viewerIsMember))
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
 }
 
@@ -185,6 +189,7 @@ export async function listPublicSlugs(): Promise<string[]> {
 export interface RegistrationInput {
   fullName: string;
   email: string;
+  passwordHash?: string;
   graduationYear: number;
   department: Department;
   organisation: string | null;
@@ -198,10 +203,14 @@ export interface RegistrationInput {
   photoUrl: string | null;
 }
 
-/** Demo-mode registration. (In Supabase mode a database trigger creates the rows on sign-up.) */
+/** Local-mode registration. (In Supabase mode a database trigger creates the rows on sign-up.) */
 export function demoCreateRegistration(input: RegistrationInput): AlumniRecord {
   const s = store();
-  if (s.alumni.some((a) => a.email.toLowerCase() === input.email.toLowerCase())) {
+  const normEmail = input.email.trim().toLowerCase();
+  if (
+    s.alumni.some((a) => a.email.toLowerCase() === normEmail) ||
+    s.users.some((u) => u.email.toLowerCase() === normEmail)
+  ) {
     throw new Error("An alumni registration with this email already exists.");
   }
   const base = slugify(`${input.fullName}-${input.graduationYear}`);
@@ -209,12 +218,15 @@ export function demoCreateRegistration(input: RegistrationInput): AlumniRecord {
   let n = 2;
   while (s.alumni.some((a) => a.slug === slug)) slug = `${base}-${n++}`;
 
+  const alumniId = uid();
+  const userId = input.passwordHash ? uid() : null;
+
   const record: AlumniRecord = {
-    id: uid(),
-    userId: null,
+    id: alumniId,
+    userId,
     slug,
     fullName: input.fullName,
-    email: input.email,
+    email: normEmail,
     phone: null,
     graduationYear: input.graduationYear,
     department: input.department,
@@ -234,6 +246,16 @@ export function demoCreateRegistration(input: RegistrationInput): AlumniRecord {
     createdAt: new Date().toISOString(),
   };
   s.alumni.unshift(record);
+
+  if (userId && input.passwordHash) {
+    s.users.push({
+      id: userId,
+      email: normEmail,
+      passwordHash: input.passwordHash,
+      role: null,
+      alumniId,
+    });
+  }
   return record;
 }
 
@@ -363,4 +385,5 @@ export async function adminDeleteAlumni(id: string) {
   }
   const s = store();
   s.alumni = s.alumni.filter((a) => a.id !== id);
+  s.users = s.users.filter((u) => u.alumniId !== id);
 }

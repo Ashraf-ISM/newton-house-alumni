@@ -1,4 +1,4 @@
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, ShieldCheck, UserCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -10,6 +10,8 @@ import { images } from "@/data/images";
 import { viewerIsMember } from "@/lib/auth";
 import { listDirectory } from "@/lib/data/alumni";
 import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Alumni Directory",
@@ -37,9 +39,20 @@ export default async function AlumniPage() {
         image={images.facadeWestWing}
       >
         <div className="mt-9 flex flex-wrap gap-3">
-          <Link href="/join" className={cn(buttonVariants({ variant: "gold" }))}>
-            Add your profile <ArrowRight aria-hidden />
-          </Link>
+          {member ? (
+            <Link href="/portal" className={cn(buttonVariants({ variant: "gold" }))}>
+              <UserCheck aria-hidden /> Manage My Profile &amp; Privacy
+            </Link>
+          ) : (
+            <>
+              <Link href="/login?next=/alumni" className={cn(buttonVariants({ variant: "gold" }))}>
+                <Lock aria-hidden className="size-3.5" /> Member Sign In
+              </Link>
+              <Link href="/join" className={cn(buttonVariants({ variant: "outline-light" }))}>
+                Register as an Alumnus <ArrowRight aria-hidden />
+              </Link>
+            </>
+          )}
           <Link href="/achievements" className={cn(buttonVariants({ variant: "outline-light" }))}>
             Notable alumni
           </Link>
@@ -48,22 +61,39 @@ export default async function AlumniPage() {
 
       <section className="paper min-h-[60vh] bg-ivory py-14 lg:py-20">
         <div className="container-nh">
-          <div className="mb-8 grid gap-3 lg:grid-cols-2">
+          <div className="mb-8 grid gap-4 lg:grid-cols-2">
             {hasSamples ? (
               <SampleNotice>
-                The directory currently contains <strong>sample records</strong> (fictional people with generic organisations) so you can try search and filters.
-                They will be removed as verified members are approved.
+                The directory currently contains <strong>sample records</strong> (fictional people with generic
+                organisations) so you can try search and filters. They are replaced as verified members are approved.
               </SampleNotice>
             ) : null}
-            <SampleNotice>
-              <span className="inline-flex items-center gap-1.5 font-semibold">
-                <Lock className="size-3.5" aria-hidden /> Privacy first.
-              </span>{" "}
-              {member
-                ? "You are viewing as a signed-in member: profiles shared with members are included."
-                : "Only profiles members have chosen to make public are shown. Sign in to see profiles shared with members."}{" "}
-              Contact details are never displayed without consent.
-            </SampleNotice>
+
+            {member ? (
+              <div className="flex items-start gap-3 rounded-md border border-[#bcd8c4] bg-[#eef6f0] px-4 py-3 text-[0.8125rem] leading-relaxed text-[#1f4d33]">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <div>
+                  <strong>Verified Member View Active:</strong> You are signed in as an authorised member. Profiles
+                  shared with <em>Members Only</em> and consented networking details are unlocked.{" "}
+                  <Link href="/portal" className="font-semibold underline">
+                    Edit your privacy settings
+                  </Link>
+                  .
+                </div>
+              </div>
+            ) : (
+              <SampleNotice>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-navy">
+                  <Lock className="size-3.5 text-gold-dark" aria-hidden /> Privacy &amp; Member Protection:
+                </span>{" "}
+                Only profiles members have chosen to make <strong>Public</strong> are shown here, and contact details are
+                redacted for visitors.{" "}
+                <Link href="/login?next=/alumni" className="font-semibold text-gold-deep underline">
+                  Sign in as a verified alumnus
+                </Link>{" "}
+                to view members-only profiles and networking details.
+              </SampleNotice>
+            )}
           </div>
           <Suspense fallback={<p className="py-20 text-center text-muted-strong">Loading the directory…</p>}>
             <AlumniDirectory alumni={alumni} memberView={member} />

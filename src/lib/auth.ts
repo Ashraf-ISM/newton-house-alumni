@@ -1,72 +1,117 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMyAlumniRecord } from "@/lib/data/alumni";
-import { DEMO_MEMBER_ID, store } from "@/lib/data/store";
+import { store } from "@/lib/data/store";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import type { AlumniRecord } from "@/types";
 
 export interface Viewer {
-  /** True when running without Supabase (sample data, no real auth). */
+  /** True when authenticated via the built-in local session store. */
   demo: boolean;
   userId: string | null;
   email: string | null;
   role: "admin" | "editor" | null;
   alumni: AlumniRecord | null;
-  /** Signed-in alumnus whose registration is approved. */
+  /** True when the signed-in user is an approved alumnus. */
   isApprovedMember: boolean;
 }
 
+const ANONYMOUS_VIEWER = (demo: boolean): Viewer => ({
+  demo,
+  userId: null,
+  email: null,
+  role: null,
+  alumni: null,
+  isApprovedMember: false,
+});
+
 /**
- * Resolve the current viewer. In demo mode the viewer is a demonstration
- * member with admin rights so the full portal and dashboard can be explored.
+ * Resolve the current authenticated viewer.
+ * Unauthenticated visitors are ALWAYS anonymous (`userId: null, role: null`).
+ * Only authorised users (Administrators or Approved Alumni Members) receive an
+ * active viewer session.
  */
 export async function getViewer(): Promise<Viewer> {
-  if (!isSupabaseConfigured()) {
-    const alumni = store().alumni.find((a) => a.id === DEMO_MEMBER_ID) ?? null;
-    return {
-      demo: true,
-      userId: "demo-user",
-      email: alumni?.email ?? null,
-      role: "admin",
-      alumni,
-      isApprovedMember: alumni?.status === "approved",
-    };
+  const cookieStore = await cookies();
+  const rawToken = cookieStore.get(SESSION_COOKIE)?.value;
+  const localSession = await verifySessionToken(rawToken);
+
+  if (localSession) {
+    const s = store();
+    const user = s.users.find((u) => u.id === localSession.userId);
+    if (user) {
+      const alumni =
+        (user.alumniId ? s.alumni.find((a) => a.id === user.alumniId) : null) ??
+        s.alumni.find((a) => a.userId === user.id || a.email.toLowerCase() === user.email.toLowerCase()) ??
+        null;
+      const isApprovedMember = alumni?.status === "approved";
+      if (user.role || isApprovedMember) {
+        return {
+          demo: true,
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          alumni,
+          isApprovedMember,
+        };
+      }
+    }
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { demo: false, userId: null, email: null, role: null, alumni: null, isApprovedMember: false };
+  if (!isSupabaseConfigured()) {
+    return ANONYMOUS_VIEWER(true);
+  }
 
-  const [{ data: adminRow }, alumni] = await Promise.all([
-    supabase.from("admin_users").select("role").eq("user_id", user.id).maybeSingle(),
-    getMyAlumniRecord(user.id),
-  ]);
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return ANONYMOUS_VIEWER(false);
 
-  return {
-    demo: false,
-    userId: user.id,
-    email: user.email ?? null,
-    role: (adminRow?.role as Viewer["role"]) ?? null,
-    alumni,
-    isApprovedMember: alumni?.status === "approved",
-  };
+    const [{ data: adminRow }, alumni] = await Promise.all([
+      supabase.from("admin_users").select("role").eq("user_id", user.id).maybeSingle(),
+      getMyAlumniRecord(user.id),
+    ]);
+
+    const role = (adminRow?.role as Viewer["role"]) ?? null;
+    const isApprovedMember = alumni?.status === "approved";
+
+    if (!role && !isApprovedMember) {
+      return ANONYMOUS_VIEWER(false);
+    }
+
+    return {
+      demo: false,
+      userId: user.id,
+      email: user.email ?? null,
+      role,
+      alumni,
+      isApprovedMember,
+    };
+  } catch {
+    return ANONYMOUS_VIEWER(false);
+  }
 }
 
-/** Public pages only need to know whether members-only profiles may be shown. */
+/** True when the current viewer is a signed-in approved alumnus or administrator. */
 export async function viewerIsMember(): Promise<boolean> {
-  if (!isSupabaseConfigured()) return false; // demo directory shows the public view
   const v = await getViewer();
   return v.isApprovedMember || v.role !== null;
 }
 
+/** Guards member-only routes (/portal). Redirects unauthenticated or unapproved users to /login. */
 export async function requireUser(next = "/portal") {
   const v = await getViewer();
-  if (!v.userId) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!v.userId || (!v.isApprovedMember && !v.role)) {
+    redirect(`/login?next=${encodeURIComponent(next)}`);
+  }
   return v;
 }
 
+/** Guards administrator routes (/admin). Redirects unauthenticated users to /login and non-admins to /portal. */
 export async function requireAdmin() {
   const v = await getViewer();
   if (!v.userId) redirect("/login?next=/admin");
@@ -74,9 +119,11 @@ export async function requireAdmin() {
   return v;
 }
 
-/** For server actions: throws instead of redirecting. */
+/** For server actions: throws if the caller is not an authenticated administrator. */
 export async function assertAdmin() {
   const v = await getViewer();
-  if (!v.role) throw new Error("You do not have permission to perform this action.");
+  if (!v.userId || !v.role) {
+    throw new Error("Authorisation required: only administrators can perform this action.");
+  }
   return v;
 }

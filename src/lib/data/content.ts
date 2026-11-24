@@ -1,6 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
-import { uid } from "@/lib/utils";
+import { slugify, uid } from "@/lib/utils";
 import type { Achievement, AchievementCategory, Announcement, Department, GalleryCategory, GalleryItem } from "@/types";
 import { store } from "./store";
 
@@ -104,6 +104,68 @@ export async function deleteAchievement(id: string) {
   }
   const s = store();
   s.achievements = s.achievements.filter((a) => a.id !== id);
+}
+
+/**
+ * Public achievement submission — always created as an unpublished, unverified
+ * draft awaiting admin review and member verification before publication.
+ */
+export async function createAchievementSubmission(
+  input: Omit<Achievement, "id" | "slug" | "verified" | "isSample" | "published">,
+) {
+  const baseSlug = slugify(input.graduationYear ? `${input.name}-${input.graduationYear}` : input.name) || `achievement-${Date.now()}`;
+
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const slug = `${baseSlug}-${uid().slice(0, 6)}`;
+    const { error } = await supabase.from("achievements").insert({
+      slug,
+      name: input.name,
+      designation: input.designation,
+      organisation: input.organisation,
+      category: input.category,
+      summary: input.summary,
+      biography: input.biography.join("\n\n"),
+      portrait_url: input.portraitUrl,
+      graduation_year: input.graduationYear,
+      department: input.department,
+      verified: false,
+      is_sample: false,
+      published: false,
+    });
+    if (error) throw new Error(error.message);
+    return slug;
+  }
+
+  const s = store();
+  let slug = baseSlug;
+  let n = 2;
+  while (s.achievements.some((x) => x.slug === slug)) slug = `${baseSlug}-${n++}`;
+  s.achievements.unshift({
+    ...input,
+    id: uid(),
+    slug,
+    verified: false,
+    isSample: false,
+    published: false,
+  });
+  return slug;
+}
+
+export async function setAchievementApproval(id: string, opts: { verified: boolean; published: boolean }) {
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("achievements")
+      .update({ verified: opts.verified, published: opts.published })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const ex = store().achievements.find((x) => x.id === id);
+  if (!ex) throw new Error("Achievement not found.");
+  ex.verified = opts.verified;
+  ex.published = opts.published;
 }
 
 /* ==================================================================

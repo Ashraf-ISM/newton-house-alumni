@@ -178,8 +178,9 @@ with (security_barrier = true) as
 select
   a.id, a.slug, a.full_name, a.graduation_year, a.department,
   p.designation, p.organisation, p.city, p.country, p.profession,
-  p.linkedin_url, p.photo_url, p.bio, p.visibility,
-  case when p.show_email then a.email else null end as public_email,
+  case when public.is_approved_member() then p.linkedin_url else null end as linkedin_url,
+  p.photo_url, p.bio, p.visibility,
+  case when p.show_email and public.is_approved_member() then a.email else null end as public_email,
   a.is_sample, a.created_at
 from public.alumni a
 join public.alumni_profiles p on p.alumni_id = a.id
@@ -343,9 +344,10 @@ create policy "profiles: owner update" on public.alumni_profiles for update
 create policy "profiles: admin insert" on public.alumni_profiles for insert with check (public.is_admin());
 create policy "profiles: admin delete" on public.alumni_profiles for delete using (public.is_admin());
 
--- Published content is public; admins/editors manage everything.
-create policy "achievements: public read" on public.achievements for select using (published or public.is_admin());
-create policy "achievements: admin write" on public.achievements for all using (public.is_admin()) with check (public.is_admin());
+-- Published content is public; public users may submit draft achievements for admin review; admins/editors manage everything.
+create policy "achievements: public read"   on public.achievements for select using (published or public.is_admin());
+create policy "achievements: public submit" on public.achievements for insert with check (not published and not verified and not is_sample);
+create policy "achievements: admin write"   on public.achievements for all using (public.is_admin()) with check (public.is_admin());
 
 create policy "events: public read" on public.events for select using (published or public.is_admin());
 create policy "events: admin write" on public.events for all using (public.is_admin()) with check (public.is_admin());

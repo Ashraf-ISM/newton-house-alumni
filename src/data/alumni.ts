@@ -21,8 +21,8 @@ type Seed = [
 ];
 
 const seeds: Seed[] = [
-  ["Aarav Sinha", 2012, "Physics", "Research Fellow", "National Research Institute", "Bengaluru", "India", "Academia & Research"],
-  ["Ishaan Prasad", 2015, "Chemistry", "Process Chemist", "Pharmaceutical Manufacturer", "Hyderabad", "India", "Science & Technology"],
+  ["Syed Md Enam", 2022, "Geology", "Geologist", "Al Tasnim Group (Al Tasnim Enterprises LLC)", "Muscat", "Oman", "Science & Technology"],
+  ["Sujeet Pandey", 2022, "Geology", "Geologist", "", "New Delhi", "India", "Engineering"],
   ["Rohan Kumar", 2016, "Mathematics", "Software Engineer", "Global Technology Company", "Pune", "India", "Science & Technology"],
   ["Vivek Ranjan", 2018, "Physics", "Scientist", "Defence Research Laboratory", "New Delhi", "India", "Science & Technology"],
   ["Kunal Verma", 2009, "Zoology", "Assistant Professor", "State University", "Patna", "India", "Academia & Research"],

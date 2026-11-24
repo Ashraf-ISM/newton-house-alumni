@@ -1,4 +1,4 @@
-import { ArrowLeft, Briefcase, Building2, GraduationCap, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, Briefcase, Building2, GraduationCap, Lock, Mail, MapPin, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,14 +11,12 @@ import { SampleNotice } from "@/components/layout/sample-notice";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { viewerIsMember } from "@/lib/auth";
-import { getDirectoryProfile, listDirectory, listPublicSlugs } from "@/lib/data/alumni";
+import { getDirectoryProfile, listDirectory } from "@/lib/data/alumni";
 import { absoluteUrl, cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  return (await listPublicSlugs()).map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -29,7 +27,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${a.fullName} — Class of ${a.graduationYear}`,
     description: `${a.fullName}, ${a.department} (${a.graduationYear})${role ? ` — ${role}` : ""}. Newton House alumni directory.`,
     alternates: { canonical: `/alumni/${a.slug}` },
-    // Sample records are demonstrations and must never be indexed as real people.
     robots: a.isSample ? { index: false, follow: true } : undefined,
     openGraph: { type: "profile", title: a.fullName, url: `/alumni/${a.slug}` },
   };
@@ -63,7 +60,6 @@ export default async function AlumniProfilePage({ params }: Props) {
         worksFor: a.organisation ? { "@type": "Organization", name: a.organisation } : undefined,
         alumniOf: { "@type": "CollegeOrUniversity", name: "Patna Science College" },
         url: absoluteUrl(`/alumni/${a.slug}`),
-        sameAs: a.linkedinUrl ? [a.linkedinUrl] : undefined,
       };
 
   return (
@@ -79,7 +75,13 @@ export default async function AlumniProfilePage({ params }: Props) {
         <div className="container-nh -mt-28 grid gap-10 lg:grid-cols-12">
           <Reveal className="lg:col-span-4">
             <div className="bg-card p-3 shadow-lift">
-              <Portrait name={a.fullName} photoUrl={a.photoUrl} className="aspect-[4/5]" textClassName="text-7xl" sizes="(min-width: 1024px) 28vw, 90vw" />
+              <Portrait
+                name={a.fullName}
+                photoUrl={a.photoUrl}
+                className="aspect-[4/5]"
+                textClassName="text-7xl"
+                sizes="(min-width: 1024px) 28vw, 90vw"
+              />
             </div>
           </Reveal>
 
@@ -87,7 +89,11 @@ export default async function AlumniProfilePage({ params }: Props) {
             <div className="flex flex-wrap items-center gap-2">
               <p className="eyebrow text-gold-deep">Class of {a.graduationYear}</p>
               {a.isSample ? <Badge variant="sample">Sample record</Badge> : null}
-              {a.visibility === "members" ? <Badge variant="outline">Members only</Badge> : null}
+              {a.visibility === "members" ? (
+                <Badge variant="outline">
+                  <Lock className="size-3" aria-hidden /> Members only
+                </Badge>
+              ) : null}
             </div>
             <h1 className="mt-4 text-5xl leading-[1.02] text-navy sm:text-6xl">{a.fullName}</h1>
             {a.designation || a.organisation ? (
@@ -96,7 +102,8 @@ export default async function AlumniProfilePage({ params }: Props) {
 
             {a.isSample ? (
               <SampleNotice className="mt-6 max-w-2xl">
-                This is a <strong>fictional demonstration profile</strong>. It does not represent a real person or employer.
+                This is a <strong>fictional demonstration profile</strong>. It does not represent a real person or
+                employer.
               </SampleNotice>
             ) : null}
 
@@ -105,7 +112,9 @@ export default async function AlumniProfilePage({ params }: Props) {
                 <div key={d.label} className="flex gap-4 bg-card p-5">
                   <d.icon className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
                   <div>
-                    <dt className="font-label text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted-strong">{d.label}</dt>
+                    <dt className="font-label text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted-strong">
+                      {d.label}
+                    </dt>
                     <dd className="mt-1 text-[0.9375rem] text-ink">{d.value}</dd>
                   </div>
                 </div>
@@ -119,24 +128,64 @@ export default async function AlumniProfilePage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="mt-10 flex flex-wrap gap-3">
-              {a.linkedinUrl ? (
-                <a href={a.linkedinUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "navy" }))}>
-                  <LinkedInIcon /> LinkedIn profile
-                </a>
-              ) : null}
-              {a.publicEmail ? (
-                <a href={`mailto:${a.publicEmail}`} className={cn(buttonVariants({ variant: "outline" }))}>
-                  <Mail aria-hidden /> Email
-                </a>
-              ) : null}
+            {/* Contact & Networking Privacy Gate */}
+            {member ? (
+              <div className="mt-10 max-w-2xl rounded-md border border-line bg-card p-5">
+                <p className="flex items-center gap-2 font-label text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#22553a]">
+                  <ShieldCheck className="size-3.5" aria-hidden />
+                  Verified Member Contact Details
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {a.linkedinUrl ? (
+                    <a
+                      href={a.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(buttonVariants({ variant: "navy", size: "sm" }))}
+                    >
+                      <LinkedInIcon /> LinkedIn profile
+                    </a>
+                  ) : null}
+                  {a.publicEmail ? (
+                    <a href={`mailto:${a.publicEmail}`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                      <Mail aria-hidden /> {a.publicEmail}
+                    </a>
+                  ) : null}
+                  {!a.publicEmail && !a.linkedinUrl ? (
+                    <p className="text-sm text-muted-strong">
+                      This member has chosen not to share an email address or LinkedIn URL with the directory.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-10 max-w-2xl rounded-md border border-dashed border-gold-dark/45 bg-card/85 p-5">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div className="flex items-start gap-3">
+                    <Lock className="mt-0.5 size-5 shrink-0 text-gold-dark" aria-hidden />
+                    <div>
+                      <p className="text-sm font-semibold text-navy">Contact &amp; Networking Protected</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-strong">
+                        Direct email addresses and networking links are visible only to signed-in, verified Newton House
+                        alumni.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/login?next=${encodeURIComponent(`/alumni/${a.slug}`)}`}
+                    className={cn(buttonVariants({ variant: "navy", size: "sm" }), "shrink-0")}
+                  >
+                    <Lock aria-hidden className="size-3.5" /> Sign in to connect
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8">
               <Link href="/alumni" className={cn(buttonVariants({ variant: "ghost" }))}>
                 <ArrowLeft aria-hidden /> Back to directory
               </Link>
             </div>
-            {!a.publicEmail && !a.linkedinUrl ? (
-              <p className="mt-4 text-[0.8125rem] text-muted-strong">This member has not shared contact details publicly.</p>
-            ) : null}
           </Reveal>
         </div>
 

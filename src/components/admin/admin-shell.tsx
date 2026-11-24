@@ -1,9 +1,10 @@
 "use client";
 
-import { Award, CalendarDays, Images, Inbox, LayoutDashboard, Mail, Megaphone, Menu, Users, X, ExternalLink } from "lucide-react";
+import { Award, CalendarDays, Images, Inbox, LayoutDashboard, LogOut, Mail, Megaphone, Menu, ShieldCheck, Users, X, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { signOut } from "@/app/actions/auth";
 import { Emblem } from "@/components/brand/emblem";
 import { cn } from "@/lib/utils";
 import { Toaster } from "./toaster";
@@ -54,10 +55,17 @@ export function AdminShell({ children, email, demo, pendingCount }: { children: 
         ))}
       </nav>
       <div className="border-t border-gold/10 px-6 py-5 text-xs text-ivory/55">
-        <p className="truncate">{email ?? "—"}</p>
-        <Link href="/" className="mt-2 inline-flex items-center gap-1.5 text-gold/80 hover:text-gold">
-          View website <ExternalLink className="size-3" aria-hidden />
-        </Link>
+        <p className="truncate font-medium text-ivory/80">{email ?? "—"}</p>
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-gold/80 hover:text-gold">
+            View website <ExternalLink className="size-3" aria-hidden />
+          </Link>
+          <form action={signOut}>
+            <button type="submit" className="inline-flex items-center gap-1 text-ivory/65 hover:text-gold">
+              <LogOut className="size-3" aria-hidden /> Sign out
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -84,7 +92,12 @@ export function AdminShell({ children, email, demo, pendingCount }: { children: 
             <Menu className="size-5" />
           </button>
           <p className="font-label text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-muted-strong">Newton House Alumni Association</p>
-          {demo ? <span className="ml-auto rounded-full border border-dashed border-gold-dark/60 bg-gold/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-gold-deep">Demo mode</span> : null}
+          <div className="ml-auto flex items-center gap-2.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e3efe6] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#22553a]">
+              <ShieldCheck className="size-3" aria-hidden /> Authorised Admin
+            </span>
+            {demo ? <span className="hidden rounded-full border border-dashed border-gold-dark/60 bg-gold/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-gold-deep sm:inline-flex">Local Store</span> : null}
+          </div>
         </header>
         <main id="main" className="px-5 py-8 sm:px-8 lg:px-10 lg:py-10">{children}</main>
       </div>

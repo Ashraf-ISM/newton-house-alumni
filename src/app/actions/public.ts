@@ -2,11 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { getViewer } from "@/lib/auth";
+import { createAchievementSubmission } from "@/lib/data/content";
 import { createRegistration, getEventById } from "@/lib/data/events";
 import { createContactMessage, subscribe } from "@/lib/data/inbox";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { contactSchema, eventRegistrationSchema, fieldErrors, formToObject, newsletterSchema } from "@/lib/validations";
-import type { ActionResult } from "@/types";
+import { fileFrom, storeImage, validateImageFile } from "@/lib/storage";
+import { hasServiceRole, isSupabaseConfigured } from "@/lib/supabase/config";
+import { createAdminClient } from "@/lib/supabase/server";
+import {
+  achievementSubmissionSchema,
+  contactSchema,
+  eventRegistrationSchema,
+  fieldErrors,
+  formToObject,
+  newsletterSchema,
+} from "@/lib/validations";
+import type { ActionResult, Department } from "@/types";
 
 const demo = () => !isSupabaseConfigured();
 
@@ -79,5 +89,67 @@ export async function registerForEvent(_: ActionResult | null, fd: FormData): Pr
     };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Registration failed. Please try again." };
+  }
+}
+
+export async function submitAchievementNomination(_: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const parsed = achievementSubmissionSchema.safeParse(formToObject(fd));
+  const portrait = fileFrom(fd, "portrait");
+  const portraitErr = validateImageFile(portrait);
+  const errors = parsed.success ? {} : fieldErrors(parsed.error);
+  if (portraitErr) errors.portrait = [portraitErr];
+  if (!parsed.success || Object.keys(errors).length) {
+    return { ok: false, message: "Please review and complete the highlighted fields.", fieldErrors: errors };
+  }
+
+  const v = parsed.data;
+  try {
+    let portraitUrl: string | null = null;
+    if (portrait) {
+      const client = hasServiceRole() ? createAdminClient() : undefined;
+      if (!isSupabaseConfigured() || client) {
+        portraitUrl = (await storeImage(portrait, { bucket: "gallery", folder: "portraits", maxSize: 900, client })).url;
+      }
+    }
+
+    const paragraphs = v.biography
+      ? v.biography
+          .split(/\n{2,}/)
+          .map((p) => p.trim())
+          .filter(Boolean)
+      : [v.summary];
+
+    await createAchievementSubmission({
+      name: v.name,
+      designation: v.designation,
+      organisation: v.organisation,
+      category: v.category,
+      summary: v.summary,
+      biography: paragraphs,
+      portraitUrl,
+      graduationYear: v.graduationYear,
+      department: (v.department as Department | null) ?? null,
+    });
+
+    // Also record a notification in the Association inbox with submitter contact details
+    await createContactMessage({
+      name: v.name,
+      email: v.submitterEmail,
+      subject: `Achievement submission — ${v.name}`,
+      message: `${v.designation} at ${v.organisation}${v.graduationYear ? ` (Class of ${v.graduationYear})` : ""}.\n\nCitation: ${v.summary}${v.biography ? `\n\nBiography:\n${v.biography}` : ""}`,
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/achievements");
+    revalidatePath("/admin/messages");
+
+    return {
+      ok: true,
+      demo: demo(),
+      message: `Thank you. The achievement submission for ${v.name} has been queued for verification by the Association and will appear in the directory once approved.`,
+    };
+  } catch (e) {
+    console.error("[achievements] submitAchievementNomination", e);
+    return { ok: false, message: "We couldn't submit your achievement right now. Please try again shortly." };
   }
 }

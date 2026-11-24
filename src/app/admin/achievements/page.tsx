@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { removeAchievement } from "@/app/actions/admin";
+import { approveAchievement, removeAchievement } from "@/app/actions/admin";
 import { ActionButton } from "@/components/admin/action-button";
 import { AdminHeader, EmptyRow, Panel, Table } from "@/components/admin/admin-ui";
 import { SavedToast } from "@/components/admin/saved-toast";
@@ -47,12 +47,17 @@ export default async function AdminAchievementsPage() {
                 </td>
                 <td className="text-muted-strong">{categoryName(a.category)}</td>
                 <td className="space-x-1 whitespace-nowrap">
-                  <Badge variant={a.published ? "success" : "neutral"}>{a.published ? "Published" : "Draft"}</Badge>
+                  <Badge variant={a.published ? "success" : "warning"}>{a.published ? "Published" : "Pending review"}</Badge>
                   {a.verified ? <Badge variant="gold">Verified</Badge> : null}
                   {a.isSample ? <Badge variant="sample">Sample</Badge> : null}
                 </td>
                 <td>
                   <div className="flex justify-end gap-2">
+                    {!a.published ? (
+                      <ActionButton size="sm" variant="navy" action={approveAchievement.bind(null, a.id)}>
+                        Approve &amp; Publish
+                      </ActionButton>
+                    ) : null}
                     <Link href={`/admin/achievements/${a.id}`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
                       Edit
                     </Link>

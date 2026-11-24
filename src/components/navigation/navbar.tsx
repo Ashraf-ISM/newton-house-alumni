@@ -1,14 +1,21 @@
 "use client";
 
-import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Lock, LogOut, Menu, ShieldCheck, UserCheck, X } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { signOut } from "@/app/actions/auth";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { mainNav, type NavItem } from "@/data/site";
 import { cn } from "@/lib/utils";
+
+interface NavAuthState {
+  authenticated: boolean;
+  role: "admin" | "editor" | null;
+  name: string | null;
+}
 
 function isActive(pathname: string, item: NavItem) {
   if (item.href === "/") return pathname === "/";
@@ -19,6 +26,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [auth, setAuth] = useState<NavAuthState>({ authenticated: false, role: null, name: null });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -26,6 +34,19 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data) setAuth(data);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
 
   // Close the mobile menu whenever the route changes.
   const [prevPath, setPrevPath] = useState(pathname);
@@ -113,10 +134,49 @@ export function Navbar() {
           </ul>
 
           <div className="flex items-center gap-2">
-            <Link href="/join" className={cn(buttonVariants({ variant: "gold", size: "sm" }), "hidden sm:inline-flex")}>
-              Join Network
-              <ArrowRight aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-0.5" />
-            </Link>
+            {auth.authenticated ? (
+              <>
+                {auth.role ? (
+                  <Link
+                    href="/admin"
+                    className={cn(buttonVariants({ variant: "gold", size: "sm" }), "hidden sm:inline-flex")}
+                  >
+                    <ShieldCheck aria-hidden />
+                    Admin
+                  </Link>
+                ) : null}
+                <Link
+                  href="/portal"
+                  className={cn(buttonVariants({ variant: "outline-light", size: "sm" }), "hidden sm:inline-flex")}
+                >
+                  <UserCheck aria-hidden />
+                  {auth.name ?? "Portal"}
+                </Link>
+                <form action={signOut} className="hidden sm:block">
+                  <button
+                    type="submit"
+                    aria-label="Sign out"
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-gold/30 text-ivory/75 transition-colors hover:border-gold hover:text-gold"
+                  >
+                    <LogOut className="size-4" aria-hidden />
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={cn(buttonVariants({ variant: "ghost-light", size: "sm" }), "hidden md:inline-flex")}
+                >
+                  <Lock aria-hidden className="size-3.5 text-gold" />
+                  Sign In
+                </Link>
+                <Link href="/join" className={cn(buttonVariants({ variant: "gold", size: "sm" }), "hidden sm:inline-flex")}>
+                  Join Network
+                  <ArrowRight aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                </Link>
+              </>
+            )}
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -131,12 +191,22 @@ export function Navbar() {
         </nav>
       </header>
 
-      <MobileNav open={open} onClose={() => setOpen(false)} pathname={pathname} />
+      <MobileNav open={open} onClose={() => setOpen(false)} pathname={pathname} auth={auth} />
     </>
   );
 }
 
-function MobileNav({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string }) {
+function MobileNav({
+  open,
+  onClose,
+  pathname,
+  auth,
+}: {
+  open: boolean;
+  onClose: () => void;
+  pathname: string;
+  auth: NavAuthState;
+}) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -240,11 +310,36 @@ function MobileNav({ open, onClose, pathname }: { open: boolean; onClose: () => 
             })}
           </m.ul>
 
-          <div className="container-nh shrink-0 pb-10 pt-8">
-            <Link href="/join" onClick={onClose} className={cn(buttonVariants({ variant: "gold", size: "lg" }), "w-full")}>
-              Join the Alumni Network <ArrowRight aria-hidden />
-            </Link>
-            <p className="mt-6 text-center font-serif text-lg italic text-gold/80">Bound by Memories. United by Legacy.</p>
+          <div className="container-nh shrink-0 space-y-3 pb-10 pt-8">
+            {auth.authenticated ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href={auth.role ? "/admin" : "/portal"}
+                  onClick={onClose}
+                  className={cn(buttonVariants({ variant: "gold", size: "lg" }), "w-full")}
+                >
+                  {auth.role ? "Admin Panel" : "My Portal"}
+                </Link>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className={cn(buttonVariants({ variant: "outline-light", size: "lg" }), "w-full")}
+                  >
+                    <LogOut aria-hidden /> Sign Out
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
+                <Link href="/join" onClick={onClose} className={cn(buttonVariants({ variant: "gold", size: "lg" }), "w-full")}>
+                  Join the Alumni Network <ArrowRight aria-hidden />
+                </Link>
+                <Link href="/login" onClick={onClose} className={cn(buttonVariants({ variant: "outline-light", size: "lg" }), "w-full")}>
+                  <Lock aria-hidden /> Member &amp; Admin Sign In
+                </Link>
+              </>
+            )}
+            <p className="mt-4 text-center font-serif text-lg italic text-gold/80">Bound by Memories. United by Legacy.</p>
           </div>
         </m.div>
       ) : null}
