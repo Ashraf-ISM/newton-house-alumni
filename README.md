@@ -1,176 +1,410 @@
-# Newton House — Patna Science College Alumni Association
+<div align="center">
 
-> **Bound by Memories. United by Legacy.**
-> *The Home. The Memories. The Brotherhood.*
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1F38,50:173957,100:A77C3D&height=240&section=header&text=Newton%20House&fontSize=68&fontColor=F5F1E9&fontAlignY=38&animation=fadeIn&desc=Patna%20Science%20College%20Alumni%20Association&descAlign=50&descAlignY=60&descSize=20&descColor=D6AD68" alt="Newton House banner" width="100%"/>
 
-The official digital home of the Newton House Alumni Association: a premium, accessible, production-ready
-Next.js platform combining the heritage of the red-brick hostel with a verified alumni network, an open
-memories archive, events and reunions, a member portal and an admin dashboard.
+<a href="https://git.io/typing-svg">
+  <img src="https://readme-typing-svg.demolab.com?font=Cormorant+Garamond&weight=600&size=26&duration=3200&pause=900&color=D6AD68&center=true&vCenter=true&multiline=false&width=820&height=60&lines=Bound+by+Memories.+United+by+Legacy.;The+Home.+The+Memories.+The+Brotherhood.;A+premium+digital+home+for+the+alumni+network." alt="Animated tagline" />
+</a>
+
+<br/>
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-0B1F38?style=for-the-badge&logo=nextdotjs&logoColor=F5F1E9)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-0B1F38?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-0B1F38?style=for-the-badge&logo=typescript&logoColor=3178C6)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-0B1F38?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8)](https://tailwindcss.com)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-0B1F38?style=for-the-badge&logo=supabase&logoColor=3ECF8E)](https://supabase.com)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-0B1F38?style=for-the-badge&logo=vercel&logoColor=F5F1E9)](https://vercel.com)
+
+[![Build](https://img.shields.io/badge/build-passing-D6AD68?style=flat-square)](#)
+[![License](https://img.shields.io/badge/license-proprietary-A77C3D?style=flat-square)](#license)
+[![Accessibility](https://img.shields.io/badge/a11y-WCAG%20AA%20target-D6AD68?style=flat-square)](#seo-accessibility--performance)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-A77C3D?style=flat-square)](CONTRIBUTING.md)
+
+**[Live Site](#)** · **[Report Bug](../../issues)** · **[Request Feature](../../issues)**
+
+</div>
 
 ---
 
-## Tech stack
+<div align="center">
 
-| Layer | Technology |
-| --- | --- |
-| Framework | **Next.js 16** (App Router, React 19, Server Actions, Turbopack) · TypeScript |
-| Styling | **Tailwind CSS v4** with design tokens in `src/styles/globals.css` |
-| UI primitives | shadcn/ui-pattern components (CVA + `tailwind-merge`) in `src/components/ui` · **Lucide** icons |
-| Animation | **Motion for React** (reveals, hero, gallery, page transitions) · **GSAP ScrollTrigger** (timeline) |
-| Backend | **Supabase** — PostgreSQL, Auth, Storage, Row Level Security |
-| Validation | **Zod** (shared between forms and server actions) |
-| Images | `next/image` (AVIF/WebP), uploads normalised with **sharp** (EXIF/GPS stripped) |
-| Deployment | **Vercel** |
+### ✦ Demo ✦
+
+<img src="docs/demo.gif" alt="Newton House demo walkthrough" width="88%"/>
+
+<sub>Replace `docs/demo.gif` with a recorded walkthrough of the join → approve → directory flow.</sub>
+
+</div>
 
 ---
 
-## Getting started
+## 📑 Table of Contents
 
-```bash
-npm install
-npm run dev          # http://localhost:3000
-npm run build && npm start
-npm run lint && npm run typecheck
+- [Overview](#-overview)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+- [Connecting Supabase](#-connecting-supabase-production)
+- [Project Structure](#-project-structure)
+- [Design System](#-design-system)
+- [Content Integrity](#-content-integrity)
+- [Security & Privacy](#-security--privacy)
+- [SEO, Accessibility & Performance](#-seo-accessibility--performance)
+- [Deployment](#-deployment)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#license)
+
+---
+
+## 🏛️ Overview
+
+**Newton House Alumni Association** is the official digital home of the Newton House community at
+Patna Science College. It is a production-ready **Next.js 16** platform that brings together:
+
+| | |
+|:--|:--|
+| 🎓 **Verified alumni network** | Searchable directory with privacy-aware visibility controls |
+| 📸 **Memories archive** | Open gallery, lightbox and a memories reel |
+| 📅 **Events & reunions** | Sign-ups, filters and a downloadable `.ics` calendar |
+| 🏆 **Achievements** | Celebrating the brotherhood's accomplishments |
+| 🔐 **Member portal** | Profile management and avatar uploads |
+| 🛠️ **Admin dashboard** | Approvals, content, newsletter, messages and CSV exports |
+
+---
+
+## ✨ Features
+
+<details open>
+<summary><b>🌐 Public site</b></summary>
+
+- Animated homepage with scroll-driven sections (A–J)
+- Heritage pages: **About**, **Legacy** (GSAP-powered timeline)
+- Alumni directory with filters and individual profile pages
+- Achievements with detail pages
+- Events listing, detail pages and `.ics` calendar export
+- Join, contact and newsletter forms with inline validation
+
+</details>
+
+<details>
+<summary><b>🔐 Member portal</b></summary>
+
+- Email-link sign-up and login through Supabase Auth (PKCE)
+- Profile editing with visibility control (`public` · `members` · `private`)
+- Avatar upload, normalised and metadata-stripped server-side
+- Password change flow
+
+</details>
+
+<details>
+<summary><b>🧭 Admin dashboard</b></summary>
+
+- Overview of pending and recent activity
+- Alumni approval workflow (approve / reject)
+- Events, achievements, gallery and announcements management
+- Newsletter subscribers and contact message inbox
+- One-click CSV exports with formula-injection protection
+
+</details>
+
+<details>
+<summary><b>🧪 Demo mode</b></summary>
+
+- Runs with **zero configuration**: no credentials required
+- All flows functional against in-memory sample data
+- Sample records are clearly badged, `noindex`, and excluded from the sitemap
+
+</details>
+
+---
+
+## 🧩 Architecture
+
+```mermaid
+flowchart LR
+    U["👤 Visitor / Member"] --> N["Next.js 16 App Router"]
+    A["🛡️ Admin"] --> N
+    N --> S["Server Actions<br/>Zod-validated"]
+    N --> R["Repository Layer"]
+    R -->|"env configured"| SB[("Supabase<br/>PostgreSQL · Auth · Storage · RLS")]
+    R -->|"demo mode"| M[("In-memory store")]
+    S --> R
+    P["proxy.ts<br/>session refresh · route guard"] -.-> N
+    N --> V["Vercel Edge + ISR"]
+
+    classDef brand fill:#0B1F38,stroke:#D6AD68,color:#F5F1E9;
+    classDef store fill:#173957,stroke:#A77C3D,color:#F5F1E9;
+    class N,S,R,P brand;
+    class SB,M store;
 ```
 
-### Demo mode (no credentials needed)
+The **repository layer** is the key design decision: the same interfaces serve Supabase in production and an
+in-memory store in demo mode, so the entire application can be developed and reviewed without infrastructure.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|:--|:--|
+| **Framework** | Next.js 16 · App Router · React 19 · Server Actions · Turbopack · TypeScript |
+| **Styling** | Tailwind CSS v4 with design tokens in `src/styles/globals.css` |
+| **UI primitives** | shadcn/ui-pattern components (CVA + `tailwind-merge`) · Lucide icons |
+| **Motion** | Motion for React (reveals, hero, gallery, transitions) · GSAP ScrollTrigger (timeline) |
+| **Backend** | Supabase: PostgreSQL, Auth, Storage, Row Level Security |
+| **Validation** | Zod, shared between forms and server actions |
+| **Media** | `next/image` (AVIF/WebP) · `sharp` for EXIF/GPS stripping |
+| **Hosting** | Vercel |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+![Node](https://img.shields.io/badge/Node.js-20%2B-0B1F38?style=flat-square&logo=nodedotjs&logoColor=68A063)
+![npm](https://img.shields.io/badge/npm-9%2B-0B1F38?style=flat-square&logo=npm&logoColor=CB3837)
+
+### Installation
+
+```bash
+git clone https://github.com/<your-org>/newton-house.git
+cd newton-house
+npm install
+npm run dev            # → http://localhost:3000
+```
+
+| Script | Purpose |
+|:--|:--|
+| `npm run dev` | Start the development server |
+| `npm run build && npm start` | Production build and serve |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript validation |
+
+### 🧪 Demo mode (no credentials needed)
 
 Without Supabase environment variables the site runs in **demo mode**:
 
-- All pages, filters, the gallery, lightbox and memories reel work with structured sample data.
-- Every form is functional — registrations, event sign-ups, contact messages, newsletter, profile edits
-  and all admin actions are stored **in server memory** (reset on restart).
-- `/portal` and `/admin` open as a demonstration admin so the full approval workflow can be tested:
-  register at `/join` → approve at `/admin/alumni` → see the profile appear in `/alumni`.
+> `/portal` and `/admin` open as a demonstration admin so the full workflow can be tested end to end:
+> **register at `/join` → approve at `/admin/alumni` → see the profile in `/alumni`.**
 
-Every sample record is flagged (`isSample` / `isDemo`), visibly labelled in the UI, excluded from the
-sitemap and marked `noindex`.
-
-### Connecting Supabase (production)
-
-1. Create a Supabase project, then copy `.env.example` to `.env.local` and fill in:
-   `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   and (server-only) `SUPABASE_SERVICE_ROLE_KEY`.
-2. Apply the schema: `supabase db push` — or paste `supabase/migrations/20261124000000_init.sql`
-   into the SQL editor. Optionally run `supabase/seed.sql` for clearly-labelled sample content.
-3. **Auth → URL configuration:** set the Site URL and add `https://<your-domain>/auth/callback`
-   as a redirect URL. Keep "Confirm email" enabled.
-4. Sign up once through `/join`, then grant yourself admin rights:
-   ```sql
-   insert into public.admin_users (user_id, role)
-   select id, 'admin' from auth.users where email = 'you@example.com';
-   ```
-5. Restart the app. Repository functions switch from memory to PostgreSQL automatically.
+Data resets on restart, which keeps demos clean and reproducible.
 
 ---
 
-## Project structure
+## ☁️ Connecting Supabase (Production)
 
+<details>
+<summary><b>Step-by-step setup</b></summary>
+
+**1. Configure environment**
+
+Copy `.env.example` to `.env.local` and fill in:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key   # server-only, never expose
 ```
+
+**2. Apply the schema**
+
+```bash
+supabase db push
+# or paste supabase/migrations/20261124000000_init.sql into the SQL editor
+# optional: run supabase/seed.sql for clearly labelled sample content
+```
+
+**3. Configure Auth**
+
+- Set **Site URL** to your domain
+- Add `https://<your-domain>/auth/callback` to **Redirect URLs**
+- Keep **Confirm email** enabled
+
+**4. Grant admin rights** (after signing up once via `/join`)
+
+```sql
+insert into public.admin_users (user_id, role)
+select id, 'admin' from auth.users where email = 'you@example.com';
+```
+
+**5. Restart.** Repository functions switch from memory to PostgreSQL automatically.
+
+</details>
+
+---
+
+## 📂 Project Structure
+
+<details>
+<summary><b>Expand tree</b></summary>
+
+```text
 src/
-  app/
-    (site)/            public site — layout with navbar/footer + page transitions
-      page.tsx         homepage (sections A–J)
-      about/ legacy/ alumni/ alumni/[slug]/ achievements/ achievements/[slug]/
-      memories/ events/ events/[slug]/ (+ /calendar .ics) join/ contact/
-      login/ portal/ portal/password/
-    admin/             protected dashboard (overview, alumni, events, achievements,
-                       gallery, announcements, newsletter, messages, CSV exports)
-    actions/           server actions: public.ts · auth.ts · admin.ts
-    auth/callback/     Supabase email-link handler (PKCE + token-hash)
-    sitemap.ts robots.ts manifest.ts opengraph-image.tsx apple-icon.tsx icon.svg
-  components/
-    animations/ brand/ navigation/ hero/ sections/ layout/ alumni/
-    achievements/ gallery/ events/ forms/ admin/ ui/
-  data/                site config, image registry, sample content (clearly flagged)
-  lib/
-    supabase/          browser, server, public and service-role clients + proxy session refresh
-    data/              repository layer — Supabase when configured, memory store otherwise
-    validations/       Zod schemas
-    auth.ts storage.ts utils/
-  hooks/ types/ styles/
-  proxy.ts             Next 16 proxy (formerly middleware): session refresh + route guard
+├── app/
+│   ├── (site)/            # public site · navbar/footer · page transitions
+│   │   ├── page.tsx       # homepage (sections A–J)
+│   │   ├── about/ legacy/ alumni/ achievements/ memories/
+│   │   ├── events/ join/ contact/ login/ portal/
+│   ├── admin/             # protected dashboard
+│   ├── actions/           # server actions: public · auth · admin
+│   ├── auth/callback/     # Supabase email-link handler (PKCE + token-hash)
+│   └── sitemap.ts · robots.ts · manifest.ts · opengraph-image.tsx
+├── components/            # animations · navigation · hero · sections · forms · admin · ui
+├── data/                  # site config, image registry, clearly flagged sample content
+├── lib/
+│   ├── supabase/          # browser · server · public · service-role clients
+│   ├── data/              # repository layer (Supabase ⇄ memory)
+│   └── validations/       # Zod schemas
+└── proxy.ts               # Next 16 proxy: session refresh + route guard
 supabase/
-  migrations/          schema, triggers, RLS, storage buckets & policies
-  seed.sql             demonstration content
-public/
-  images/{hero,hostel,memories,alumni,events,branding}/
-  fonts/               self-hosted Cormorant Garamond, Manrope, Inter (woff2)
-docs/
-  PHOTOGRAPHY.md       how to replace photographs with high-resolution originals
-  design-reference.jpg the approved visual direction
+├── migrations/            # schema · triggers · RLS · storage buckets & policies
+└── seed.sql
 ```
 
----
-
-## Design system
-
-**Midnight Navy × Warm Ivory × Champagne Gold.** Tokens live in `src/styles/globals.css` (`@theme`).
-
-| Token | Value | Use |
-| --- | --- | --- |
-| `navy` / `navy-deep` / `navy-2` | `#0B1F38` `#102B49` `#173957` | hero, stats, memories, footer |
-| `ivory` / `ivory-2` / `card` | `#F5F1E9` `#EAE4D9` `#FFFFFF` | legacy, directory, events |
-| `gold` / `gold-dark` | `#D6AD68` `#A77C3D` | accents, CTAs, eyebrows |
-| `ink` / `muted` | `#14263D` `#687586` | text |
-| `brick` / `line` | `#A94F38` `#DDD5C8` | architectural accent, borders |
-| `gold-deep`, `muted-strong` | `#85612C` `#56637A` | **added** AA-contrast variants for small text on ivory |
-
-Typography: **Cormorant Garamond** (headings), **Manrope** (body & navigation), **Inter** (tracked labels),
-self-hosted through `next/font/local` with size-adjusted fallbacks for zero layout shift.
+</details>
 
 ---
 
-## Content integrity
+## 🎨 Design System
 
-The brief requires that nothing be invented. Accordingly:
+> **Midnight Navy × Warm Ivory × Champagne Gold**
+> Tokens are defined once in `src/styles/globals.css` under `@theme`.
 
-- **Statistics** (`src/data/site.ts → impactStats`) are `null` and render as *"Figure being verified"*.
-  Set a number and it animates automatically.
-- **Timeline dates** (`src/data/legacy.ts`) are unset and show *"archive verification pending"*.
-  Set `dateLabel` + `verified: true` to publish.
-- **Alumni, achievements and events** shipped with the project are fictional demonstrations with
-  generic organisations, clearly badged *Sample* / *Demonstration*.
-- **Contact email and social links** are `null` in `siteConfig`; only verified entries render, so no
-  link points nowhere. The contact form works regardless.
-- **Committee members** are not listed until confirmed.
+| Token | Hex | Role |
+|:--|:--:|:--|
+| ![#0B1F38](https://img.shields.io/badge/navy-0B1F38?style=flat-square&labelColor=0B1F38) | `#0B1F38` | Hero, stats, memories, footer |
+| ![#F5F1E9](https://img.shields.io/badge/ivory-F5F1E9?style=flat-square&labelColor=F5F1E9&color=F5F1E9) | `#F5F1E9` | Legacy, directory, events |
+| ![#D6AD68](https://img.shields.io/badge/gold-D6AD68?style=flat-square&labelColor=D6AD68) | `#D6AD68` | Accents, CTAs, eyebrows |
+| ![#A94F38](https://img.shields.io/badge/brick-A94F38?style=flat-square&labelColor=A94F38) | `#A94F38` | Architectural accent |
+| ![#14263D](https://img.shields.io/badge/ink-14263D?style=flat-square&labelColor=14263D) | `#14263D` | Body text |
 
----
+**Typography:** Cormorant Garamond (headings) · Manrope (body & navigation) · Inter (tracked labels)
+— self-hosted via `next/font/local` with size-adjusted fallbacks for **zero layout shift**.
 
-## Security & privacy
-
-- Row Level Security on every table. The `alumni` table is **never** publicly readable; the directory
-  is served through the `alumni_directory` view which exposes only safe columns of *approved* members
-  and enforces `public` / `members` / `private` visibility. Email is included only with `show_email`.
-- A trigger prevents members from changing their own moderation status.
-- `handle_new_user` creates a **pending** record on sign-up; admins approve or reject.
-- Storage: members may write only to `avatars/<their-user-id>/`; gallery/events buckets are admin-only.
-- The service-role key is used server-side only (registration photo upload).
-- Uploads are validated (type, 3 MB), re-encoded to WebP and stripped of EXIF/GPS metadata.
-- Honeypot fields on public forms; CSV exports guard against formula injection; security headers set
-  in `next.config.ts`.
+**AA-contrast variants** (`gold-deep`, `muted-strong`) are used for small text on ivory backgrounds.
 
 ---
 
-## SEO, accessibility & performance
+## 🧾 Content Integrity
 
-- Per-page metadata, canonical URLs, Open Graph/Twitter cards and a generated OG image.
-- `sitemap.xml` (sample records excluded), `robots.txt`, web manifest, JSON-LD (Organization,
-  BreadcrumbList, Event, Person).
-- Semantic landmarks, skip link, visible focus rings, labelled controls with `aria-describedby` errors,
-  keyboard-operable menus, lightbox and reel (Esc / arrows / space), `prefers-reduced-motion` honoured by
-  CSS, Motion (`reducedMotion="user"`) and GSAP (`matchMedia`).
-- Static generation + ISR (5-minute revalidation) for public content, on-demand revalidation after edits,
-  AVIF/WebP via `next/image`, lazy-loaded imagery, LazyMotion feature bundle.
+The project follows a strict **no-invention** policy. Nothing is published unless it is verified.
 
----
-
-## Deployment (Vercel)
-
-1. Push to a Git repository and import it in Vercel.
-2. Add the environment variables from `.env.example` (Production + Preview).
-3. Deploy. Update the Supabase Auth Site URL / redirect URL to the production domain.
+| Content | Behaviour until verified |
+|:--|:--|
+| Impact statistics | Render *"Figure being verified"*; animate automatically once a number is set |
+| Timeline dates | Show *"archive verification pending"*; publish with `dateLabel` + `verified: true` |
+| Sample alumni, events, achievements | Badged **Sample** / **Demonstration** |
+| Contact email & social links | Hidden unless set in `siteConfig`, so no link leads nowhere |
+| Committee members | Not listed until confirmed |
 
 ---
 
-© Newton House Alumni Association | Patna Science College.
+## 🔒 Security & Privacy
+
+- **Row Level Security** on every table
+- The `alumni` table is **never publicly readable**. The public directory is served through the
+  `alumni_directory` view, which exposes only safe columns of *approved* members
+- Visibility enforced at the database level: `public` · `members` · `private`; email shown only with `show_email`
+- A trigger prevents members from modifying their own moderation status
+- Sign-ups create a **pending** record that an admin must approve
+- Storage policies: members write only to `avatars/<their-user-id>/`; gallery and event buckets are admin-only
+- Service-role key is used **server-side only**
+- Uploads are validated (type, 3 MB), re-encoded to WebP, and stripped of EXIF/GPS metadata
+- Honeypot fields on public forms · CSV exports guard against formula injection · security headers in `next.config.ts`
+
+---
+
+## ♿ SEO, Accessibility & Performance
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**🔍 SEO**
+- Per-page metadata & canonical URLs
+- Open Graph / Twitter cards
+- Generated OG image
+- `sitemap.xml` · `robots.txt` · manifest
+- JSON-LD: Organization, BreadcrumbList, Event, Person
+
+</td>
+<td width="33%" valign="top">
+
+**♿ Accessibility**
+- Semantic landmarks & skip link
+- Visible focus rings
+- `aria-describedby` error messaging
+- Keyboard-operable menus, lightbox & reel
+- Honours `prefers-reduced-motion` in CSS, Motion and GSAP
+
+</td>
+<td width="33%" valign="top">
+
+**⚡ Performance**
+- Static generation + ISR (5-min revalidation)
+- On-demand revalidation after edits
+- AVIF / WebP via `next/image`
+- Lazy-loaded imagery
+- LazyMotion feature bundle
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🌍 Deployment
+
+1. Push to a Git repository and import it into **Vercel**
+2. Add the variables from `.env.example` to **Production** and **Preview**
+3. Deploy, then update Supabase Auth **Site URL** and **redirect URL** to the production domain
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Public site with animated homepage
+- [x] Member portal and admin approval workflow
+- [x] Demo mode with zero-config setup
+- [ ] Replace sample content with verified alumni records
+- [ ] Event payments and reunion registration
+- [ ] Email notifications for approvals and events
+- [ ] Multilingual interface (English / Hindi)
+
+---
+
+## 🤝 Contributing
+
+Contributions that respect the design system and content-integrity policy are welcome.
+
+```bash
+git checkout -b feature/your-feature
+npm run lint && npm run typecheck
+git commit -m "feat: describe your change"
+git push origin feature/your-feature
+```
+
+Then open a Pull Request. Please keep changes focused and include screenshots for UI work.
+
+---
+
+## 📜 License
+
+Copyright © Newton House Alumni Association · Patna Science College.
+All rights reserved. Contact the association before reusing any content or imagery.
+
+---
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:A77C3D,50:173957,100:0B1F38&height=120&section=footer" alt="footer wave" width="100%"/>
+
+**Bound by Memories. United by Legacy.**
+
+<sub>Built with care for the Newton House brotherhood.</sub>
+
+</div>
