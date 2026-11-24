@@ -1,17 +1,39 @@
 import { sampleAlumni } from "@/data/alumni";
 import { sampleAchievements } from "@/data/achievements";
+import {
+  defaultSiteSettings,
+  sampleArchiveItems,
+  sampleAuditLogs,
+  sampleBatchContributions,
+  sampleBatches,
+  sampleConnections,
+  sampleMentors,
+  sampleMentorshipRequests,
+  sampleNotifications,
+  sampleStories,
+} from "@/data/community";
 import { sampleEvents } from "@/data/events";
 import { galleryCategories, galleryItems, sampleAnnouncements } from "@/data/gallery";
 import type {
   Achievement,
+  AlumniConnection,
   AlumniRecord,
+  AlumniStory,
   Announcement,
+  ArchiveItem,
+  AuditLogEntry,
+  BatchContribution,
+  BatchRecord,
   ContactMessage,
   EventRegistration,
   GalleryCategory,
   GalleryItem,
+  MemberNotification,
+  MentorProfile,
+  MentorshipRequest,
   NewsletterSubscriber,
   NHEvent,
+  SiteSettings,
 } from "@/types";
 
 export interface LocalAuthUser {
@@ -23,11 +45,8 @@ export interface LocalAuthUser {
 }
 
 /**
- * IN-MEMORY DATA STORE (active when Supabase env vars are not configured)
- * -----------------------------------------------------------------------
- * Enforces real password-based authentication, signed HTTP-only session
- * cookies, role-based access control (admin vs. approved member), and
- * strict privacy visibility rules.
+ * IN-MEMORY DATA STORE (active when Supabase env vars are not configured
+ * or when operating in local hybrid mode).
  */
 export interface DemoStore {
   users: LocalAuthUser[];
@@ -40,6 +59,16 @@ export interface DemoStore {
   announcements: Announcement[];
   messages: ContactMessage[];
   subscribers: NewsletterSubscriber[];
+  batches: BatchRecord[];
+  batchContributions: BatchContribution[];
+  archiveItems: ArchiveItem[];
+  stories: AlumniStory[];
+  mentors: MentorProfile[];
+  mentorshipRequests: MentorshipRequest[];
+  connections: AlumniConnection[];
+  notifications: MemberNotification[];
+  auditLogs: AuditLogEntry[];
+  settings: SiteSettings;
 }
 
 export const DEMO_ADMIN_USER_ID = "user-admin-1";
@@ -63,17 +92,20 @@ function createStore(): DemoStore {
     slug: "verified-member-2014",
     fullName: "Verified Alumnus (Sample)",
     graduationYear: 2014,
+    residenceStartYear: 2011,
     department: "Physics",
     designation: "Senior Research Scientist",
     organisation: "National Research Laboratory",
     city: "Patna",
     country: "India",
     profession: "Science & Technology",
-    linkedinUrl: null,
+    linkedinUrl: "https://www.linkedin.com/in/newton-house-sample",
     photoUrl: null,
-    bio: "Sample approved member account used to test member-only directory visibility and profile privacy controls.",
+    bio: "Sample approved member account used to test the Advanced Member Portal, batch connections, stories and privacy controls.",
     visibility: "members",
     publicEmail: null,
+    showLocation: true,
+    showProfessional: true,
     status: "approved",
     isSample: true,
     createdAt: new Date().toISOString(),
@@ -81,6 +113,8 @@ function createStore(): DemoStore {
     phone: null,
     showEmail: false,
     userId: DEMO_MEMBER_USER_ID,
+    reviewedBy: adminEmail,
+    reviewedAt: "2026-11-20T09:00:00.000Z",
   };
 
   const users: LocalAuthUser[] = [
@@ -100,9 +134,16 @@ function createStore(): DemoStore {
     },
   ];
 
+  const seededAlumni = structuredClone(sampleAlumni).map((a) => ({
+    ...a,
+    residenceStartYear: a.graduationYear - 3,
+    showLocation: true,
+    showProfessional: true,
+  }));
+
   return {
     users,
-    alumni: [approvedMemberRecord, ...structuredClone(sampleAlumni)],
+    alumni: [approvedMemberRecord, ...seededAlumni],
     achievements: structuredClone(sampleAchievements),
     events: structuredClone(sampleEvents),
     registrations: [],
@@ -111,12 +152,25 @@ function createStore(): DemoStore {
     announcements: structuredClone(sampleAnnouncements),
     messages: [],
     subscribers: [],
+    batches: structuredClone(sampleBatches),
+    batchContributions: structuredClone(sampleBatchContributions),
+    archiveItems: structuredClone(sampleArchiveItems),
+    stories: structuredClone(sampleStories),
+    mentors: structuredClone(sampleMentors),
+    mentorshipRequests: structuredClone(sampleMentorshipRequests),
+    connections: structuredClone(sampleConnections),
+    notifications: structuredClone(sampleNotifications),
+    auditLogs: structuredClone(sampleAuditLogs),
+    settings: structuredClone(defaultSiteSettings),
   };
 }
 
 const g = globalThis as unknown as { __newtonHouseStore?: DemoStore };
 
 export function store(): DemoStore {
-  if (!g.__newtonHouseStore) g.__newtonHouseStore = createStore();
-  return g.__newtonHouseStore;
+  const s = g.__newtonHouseStore;
+  if (!s || !s.archiveItems || !s.stories || !s.mentors) {
+    g.__newtonHouseStore = createStore();
+  }
+  return g.__newtonHouseStore!;
 }

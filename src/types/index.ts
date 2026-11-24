@@ -2,8 +2,9 @@
    Domain types — mirror the Supabase schema in supabase/migrations.
    ------------------------------------------------------------------ */
 
-export type AlumniStatus = "pending" | "approved" | "rejected";
+export type AlumniStatus = "pending" | "approved" | "rejected" | "info_required";
 export type ProfileVisibility = "public" | "members" | "private";
+export type ModerationStatus = "pending" | "approved" | "rejected";
 
 export type Department =
   | "Physics"
@@ -34,6 +35,7 @@ export interface AlumniProfile {
   slug: string;
   fullName: string;
   graduationYear: number;
+  residenceStartYear?: number | null;
   department: Department;
   designation: string | null;
   organisation: string | null;
@@ -46,6 +48,8 @@ export interface AlumniProfile {
   visibility: ProfileVisibility;
   /** Only populated when the member has opted in to show their email. */
   publicEmail: string | null;
+  showLocation?: boolean;
+  showProfessional?: boolean;
   status: AlumniStatus;
   /** Clearly-labelled demonstration record (not a real person). */
   isSample: boolean;
@@ -57,7 +61,12 @@ export interface AlumniRecord extends AlumniProfile {
   email: string;
   phone: string | null;
   showEmail: boolean;
+  showLocation?: boolean;
+  showProfessional?: boolean;
   userId: string | null;
+  reviewNote?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export type AchievementCategory =
@@ -83,6 +92,10 @@ export interface Achievement {
   verified: boolean;
   isSample: boolean;
   published: boolean;
+  submittedBy?: string | null;
+  submittedAt?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export type EventCategory =
@@ -185,6 +198,287 @@ export interface StatMetric {
   value: number | null;
   suffix?: string;
   caption: string;
+}
+
+/* ==================================================================
+   FEATURE 1: MEMBER PORTAL — CONNECTIONS & NOTIFICATIONS
+   ================================================================== */
+export type ConnectionStatus = "pending" | "accepted" | "rejected";
+
+export interface AlumniConnection {
+  id: string;
+  requesterId: string; // alumniId
+  recipientId: string; // alumniId
+  status: ConnectionStatus;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NotificationType =
+  | "registration_approval"
+  | "connection_request"
+  | "upcoming_event"
+  | "achievement_approval"
+  | "published_story"
+  | "announcement";
+
+export interface MemberNotification {
+  id: string;
+  alumniId: string | null; // null = broadcast to all approved members
+  type: NotificationType;
+  title: string;
+  body: string;
+  href: string;
+  read: boolean;
+  createdAt: string;
+}
+
+/* ==================================================================
+   FEATURE 2: NEWTON HOUSE BATCH DIRECTORY
+   ================================================================== */
+export interface BatchRecord {
+  id: string;
+  slug: string;
+  year: number;
+  residencePeriod: string;
+  title: string;
+  description: string;
+  photoUrl: string | null;
+  isSample: boolean;
+}
+
+export type BatchContributionType =
+  | "photograph"
+  | "memory"
+  | "historical_info"
+  | "reunion_detail";
+
+export interface BatchContribution {
+  id: string;
+  batchSlug: string;
+  batchYear: number;
+  type: BatchContributionType;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  submittedBy: string;
+  submitterAlumniId: string | null;
+  submittedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  status: ModerationStatus;
+  isSample: boolean;
+}
+
+/* ==================================================================
+   FEATURE 3: DIGITAL HERITAGE ARCHIVE
+   ================================================================== */
+export type ArchiveCategorySlug =
+  | "historical-building"
+  | "hostel-life"
+  | "cultural-celebrations"
+  | "sports-activities"
+  | "hostel-administration"
+  | "previous-superintendents"
+  | "batch-photographs"
+  | "festivals-celebrations"
+  | "important-documents"
+  | "newspaper-features";
+
+export interface ArchiveCategory {
+  slug: ArchiveCategorySlug;
+  name: string;
+  description: string;
+}
+
+export type ArchiveMediaType = "photograph" | "document";
+export type ArchiveFileFormat = "webp" | "jpeg" | "png" | "pdf";
+
+export interface ArchiveItem {
+  id: string;
+  title: string;
+  categorySlug: ArchiveCategorySlug;
+  mediaType: ArchiveMediaType;
+  fileFormat: ArchiveFileFormat;
+  fileUrl: string;
+  previewUrl: string | null;
+  width: number;
+  height: number;
+  approximateYear: string;
+  yearVerified: boolean;
+  description: string;
+  contributorName: string;
+  showContributor: boolean;
+  permissionConfirmed: boolean;
+  status: ModerationStatus;
+  submittedBy: string;
+  submittedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  isSample: boolean;
+}
+
+/* ==================================================================
+   FEATURE 4: ALUMNI STORIES
+   ================================================================== */
+export type StoryCategorySlug =
+  | "professional-journeys"
+  | "academic-research"
+  | "entrepreneurship"
+  | "public-service"
+  | "personal-memories"
+  | "life-at-newton-house"
+  | "inspirational-journeys";
+
+export interface StoryCategory {
+  slug: StoryCategorySlug;
+  name: string;
+  description: string;
+}
+
+export type StoryStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "approved"
+  | "published"
+  | "rejected";
+
+export interface AlumniStory {
+  id: string;
+  slug: string;
+  title: string;
+  categorySlug: StoryCategorySlug;
+  summary: string;
+  content: string[];
+  coverImageUrl: string | null;
+  supportingImages: string[];
+  authorAlumniId: string | null;
+  authorSlug: string | null;
+  authorName: string;
+  authorPhotoUrl: string | null;
+  authorDepartment: Department;
+  authorGraduationYear: number;
+  authorResidenceYears: string | null;
+  authorDesignation: string | null;
+  authorOrganisation: string | null;
+  featured: boolean;
+  status: StoryStatus;
+  publishedAt: string | null;
+  submittedBy: string;
+  submittedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  isSample: boolean;
+}
+
+/* ==================================================================
+   FEATURE 5: MENTORSHIP NETWORK
+   ================================================================== */
+export type MentorCategorySlug =
+  | "civil-services-government"
+  | "higher-education"
+  | "research-academia"
+  | "engineering-technology"
+  | "corporate-careers"
+  | "geoscience-earth-sciences"
+  | "entrepreneurship"
+  | "finance-management"
+  | "medicine-healthcare"
+  | "other-professional-fields";
+
+export interface MentorCategory {
+  slug: MentorCategorySlug;
+  name: string;
+  description: string;
+}
+
+export type CommunicationMethod =
+  | "Platform Message"
+  | "Email Introduction"
+  | "Video Session"
+  | "In-Person at Reunion";
+
+export type MentorAvailability =
+  | "Open for Mentorship"
+  | "Limited Availability"
+  | "Currently Unavailable";
+
+export interface MentorProfile {
+  id: string;
+  alumniId: string | null;
+  slug: string;
+  name: string;
+  photoUrl: string | null;
+  graduationYear: number;
+  department: Department;
+  designation: string;
+  organisation: string;
+  city: string;
+  industry: string;
+  experienceYears: number;
+  expertise: string[];
+  categories: MentorCategorySlug[];
+  preferredCommunication: CommunicationMethod;
+  availability: MentorAvailability;
+  bio: string;
+  status: ModerationStatus;
+  submittedBy: string;
+  submittedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  isSample: boolean;
+}
+
+export type MentorshipRequestStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "info_requested";
+
+export interface MentorshipRequest {
+  id: string;
+  mentorId: string;
+  mentorName: string;
+  menteeAlumniId: string | null;
+  menteeName: string;
+  menteeEmail: string;
+  menteeBatch: string;
+  title: string;
+  areaOfGuidance: string;
+  introduction: string;
+  question: string;
+  preferredCommunication: CommunicationMethod;
+  status: MentorshipRequestStatus;
+  mentorResponseNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ==================================================================
+   ADMIN AUDIT LOGS & SITE SETTINGS
+   ================================================================== */
+export interface AuditLogEntry {
+  id: string;
+  entityType: "alumni" | "batch_contribution" | "archive" | "story" | "achievement" | "event" | "mentor" | "mentorship_request" | "role" | "settings";
+  entityId: string;
+  entityTitle: string;
+  action: string;
+  actorEmail: string;
+  previousStatus: string | null;
+  newStatus: string | null;
+  createdAt: string;
+}
+
+export interface SiteSettings {
+  requireRegistrationApproval: boolean;
+  requireStoryModeration: boolean;
+  requireArchiveModeration: boolean;
+  requireMentorApproval: boolean;
+  allowMemberConnections: boolean;
+  updatedAt: string;
+  updatedBy: string;
 }
 
 /** Uniform result for server actions consumed by forms. */

@@ -108,26 +108,34 @@ function fromAlumniRow(r: AlumniRow): AlumniRecord {
 
 /**
  * Strip private fields so a full record can be safely sent to the browser.
- * Contact & social links (`publicEmail`, `linkedinUrl`) are only exposed to
- * signed-in approved members (and `publicEmail` additionally requires `showEmail` consent).
+ * Respects granular member privacy settings:
+ * - `showLocation === false` hides city and country.
+ * - `showProfessional === false` hides designation, organisation, and profession.
+ * - Contact & social links (`publicEmail`, `linkedinUrl`) are only exposed to
+ *   signed-in approved members (and `publicEmail` additionally requires `showEmail` consent).
  */
 export function toPublicProfile(r: AlumniRecord, viewerIsMember = false): AlumniProfile {
+  const showLoc = r.showLocation !== false;
+  const showProf = r.showProfessional !== false;
   return {
     id: r.id,
     slug: r.slug,
     fullName: r.fullName,
     graduationYear: r.graduationYear,
+    residenceStartYear: r.residenceStartYear ?? r.graduationYear - 3,
     department: r.department,
-    designation: r.designation,
-    organisation: r.organisation,
-    city: r.city,
-    country: r.country,
-    profession: r.profession,
-    linkedinUrl: viewerIsMember ? r.linkedinUrl : null,
+    designation: showProf ? r.designation : null,
+    organisation: showProf ? r.organisation : null,
+    city: showLoc ? r.city : null,
+    country: showLoc ? r.country : null,
+    profession: showProf ? r.profession : null,
+    linkedinUrl: viewerIsMember && showProf ? r.linkedinUrl : null,
     photoUrl: r.photoUrl,
     bio: r.bio,
     visibility: r.visibility,
     publicEmail: viewerIsMember && r.showEmail ? r.email : null,
+    showLocation: showLoc,
+    showProfessional: showProf,
     status: r.status,
     isSample: r.isSample,
     createdAt: r.createdAt,
@@ -277,6 +285,10 @@ export async function getMyAlumniRecord(userId: string): Promise<AlumniRecord | 
 }
 
 export interface ProfileUpdate {
+  fullName?: string;
+  department?: Department;
+  graduationYear?: number;
+  residenceStartYear?: number | null;
   designation: string | null;
   organisation: string | null;
   city: string | null;
@@ -286,28 +298,40 @@ export interface ProfileUpdate {
   bio: string | null;
   visibility: ProfileVisibility;
   showEmail: boolean;
+  showLocation?: boolean;
+  showProfessional?: boolean;
   photoUrl?: string | null;
 }
 
 /** Owner or admin update of profile fields. RLS restricts owners to their own row. */
 export async function updateProfile(alumniId: string, patch: ProfileUpdate) {
   if (isSupabaseConfigured()) {
-    const supabase = await createClient();
-    const row: Record<string, unknown> = {
-      designation: patch.designation,
-      organisation: patch.organisation,
-      city: patch.city,
-      country: patch.country,
-      profession: patch.profession,
-      linkedin_url: patch.linkedinUrl,
-      bio: patch.bio,
-      visibility: patch.visibility,
-      show_email: patch.showEmail,
-    };
-    if (patch.photoUrl !== undefined) row.photo_url = patch.photoUrl;
-    const { error } = await supabase.from("alumni_profiles").update(row).eq("alumni_id", alumniId);
-    if (error) throw new Error(error.message);
-    return;
+    try {
+      const supabase = await createClient();
+      if (patch.fullName || patch.department || patch.graduationYear) {
+        const identityRow: Record<string, unknown> = {};
+        if (patch.fullName) identityRow.full_name = patch.fullName;
+        if (patch.department) identityRow.department = patch.department;
+        if (patch.graduationYear) identityRow.graduation_year = patch.graduationYear;
+        await supabase.from("alumni").update(identityRow).eq("id", alumniId);
+      }
+      const row: Record<string, unknown> = {
+        designation: patch.designation,
+        organisation: patch.organisation,
+        city: patch.city,
+        country: patch.country,
+        profession: patch.profession,
+        linkedin_url: patch.linkedinUrl,
+        bio: patch.bio,
+        visibility: patch.visibility,
+        show_email: patch.showEmail,
+      };
+      if (patch.photoUrl !== undefined) row.photo_url = patch.photoUrl;
+      const { error } = await supabase.from("alumni_profiles").update(row).eq("alumni_id", alumniId);
+      if (!error) return;
+    } catch {
+      // Fall through to local store if hybrid account
+    }
   }
   const rec = store().alumni.find((a) => a.id === alumniId);
   if (!rec) throw new Error("Profile not found.");
@@ -343,19 +367,62 @@ export async function adminGetAlumni(id: string): Promise<AlumniRecord | null> {
   return store().alumni.find((a) => a.id === id) ?? null;
 }
 
-export async function adminSetStatus(id: string, status: AlumniStatus, reviewerId: string | null) {
+export async function adminSetStatus(
+  id: string,
+  status: AlumniStatus,
+  reviewerId: string | null,
+  reviewerEmail = "admin@newtonhouse.org",
+  reviewNote: string | null = null,
+) {
+  const now = new Date().toISOString();
   if (isSupabaseConfigured()) {
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("alumni")
-      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: reviewerId })
-      .eq("id", id);
-    if (error) throw new Error(error.message);
-    return;
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase
+        .from("alumni")
+        .update({ status, reviewed_at: now, reviewed_by: reviewerId, review_note: reviewNote })
+        .eq("id", id);
+      if (!error) return;
+    } catch {
+      // Fall through to local store
+    }
   }
-  const rec = store().alumni.find((a) => a.id === id);
+  const s = store();
+  const rec = s.alumni.find((a) => a.id === id);
   if (!rec) throw new Error("Record not found.");
+  const previousStatus = rec.status;
   rec.status = status;
+  rec.reviewedBy = reviewerEmail;
+  rec.reviewedAt = now;
+  if (reviewNote !== null) rec.reviewNote = reviewNote;
+
+  s.auditLogs.unshift({
+    id: uid(),
+    entityType: "alumni",
+    entityId: rec.id,
+    entityTitle: `${rec.fullName} (${rec.graduationYear})`,
+    action: `Verification status changed to ${status}`,
+    actorEmail: reviewerEmail,
+    previousStatus,
+    newStatus: status,
+    createdAt: now,
+  });
+
+  if (status === "approved" || status === "info_required") {
+    s.notifications.unshift({
+      id: uid(),
+      alumniId: rec.id,
+      type: "registration_approval",
+      title: status === "approved" ? "Profile Verified" : "Additional Verification Information Requested",
+      body:
+        status === "approved"
+          ? "Your Newton House alumni profile has been verified and approved by the Association."
+          : reviewNote || "Please review and update your profile details in the Member Dashboard.",
+      href: "/member/dashboard?tab=profile",
+      read: false,
+      createdAt: now,
+    });
+  }
 }
 
 export async function adminUpdateIdentity(
