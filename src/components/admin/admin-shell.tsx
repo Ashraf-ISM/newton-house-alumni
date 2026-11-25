@@ -9,6 +9,7 @@ import {
   Handshake,
   Images,
   Inbox,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -31,6 +32,7 @@ import { Toaster } from "./toaster";
 
 const nav = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/about", label: "About & Superintendents", icon: Landmark },
   { href: "/admin/alumni", label: "Alumni Management", icon: Users },
   { href: "/admin/batches", label: "Batch Management", icon: GraduationCap },
   { href: "/admin/stories", label: "Story Management", icon: BookOpenText },

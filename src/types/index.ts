@@ -461,7 +461,21 @@ export interface MentorshipRequest {
    ================================================================== */
 export interface AuditLogEntry {
   id: string;
-  entityType: "alumni" | "batch_contribution" | "archive" | "story" | "achievement" | "event" | "mentor" | "mentorship_request" | "role" | "settings";
+  entityType:
+    | "alumni"
+    | "batch_contribution"
+    | "archive"
+    | "story"
+    | "achievement"
+    | "event"
+    | "mentor"
+    | "mentorship_request"
+    | "superintendent"
+    | "timeline"
+    | "testimonial"
+    | "leadership"
+    | "role"
+    | "settings";
   entityId: string;
   entityTitle: string;
   action: string;
@@ -479,6 +493,97 @@ export interface SiteSettings {
   allowMemberConnections: boolean;
   updatedAt: string;
   updatedBy: string;
+}
+
+/* ==================================================================
+   ABOUT PAGE: SUPERINTENDENTS, HERITAGE TIMELINE, TESTIMONIALS & LEADERSHIP
+   ================================================================== */
+export interface SuperintendentRecord {
+  id: string;
+  fullName: string;
+  designation: string;
+  profileImage: string | null;
+  tenureStart: string | null;
+  tenureEnd: string | null;
+  tenurePeriodLabel: string;
+  isCurrent: boolean;
+  biography: string;
+  academicBackground: string | null;
+  contributions: string;
+  personalMessage: string | null;
+  displayOrder: number;
+  isPublished: boolean;
+  /** True when the entry is a clearly labelled institutional placeholder awaiting verified details. */
+  isPlaceholder: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type HeritageTimelineCategory =
+  | "The Early Years"
+  | "Growing Together"
+  | "New Generations"
+  | "A Changing Era"
+  | "Today & Beyond";
+
+export interface HeritageMilestone {
+  id: string;
+  category: HeritageTimelineCategory;
+  periodLabel: string | null;
+  verified: boolean;
+  title: string;
+  description: string;
+  importantDevelopment: string | null;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  displayOrder: number;
+  isPublished: boolean;
+  isPlaceholder: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlumniTestimonial {
+  id: string;
+  alumniName: string;
+  batchYear: string;
+  department: Department | null;
+  designation: string | null;
+  photoUrl: string | null;
+  quote: string;
+  status: ModerationStatus;
+  isPublished: boolean;
+  isSample: boolean;
+  submittedBy: string;
+  submittedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+}
+
+export type AssociationLeadershipRole =
+  | "President"
+  | "Vice President"
+  | "General Secretary"
+  | "Joint Secretary"
+  | "Treasurer"
+  | "Executive Committee Member"
+  | "Batch Representative"
+  | "Faculty Advisor";
+
+export interface AssociationLeader {
+  id: string;
+  fullName: string;
+  role: AssociationLeadershipRole;
+  batchYear: number | null;
+  department: Department | null;
+  designation: string | null;
+  photoUrl: string | null;
+  bio: string | null;
+  displayOrder: number;
+  isConfirmed: boolean;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** Uniform result for server actions consumed by forms. */

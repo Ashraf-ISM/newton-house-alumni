@@ -1,3 +1,9 @@
+import {
+  initialAssociationLeaders,
+  initialHeritageMilestones,
+  initialSuperintendents,
+  initialTestimonials,
+} from "@/data/about";
 import { sampleAlumni } from "@/data/alumni";
 import { sampleAchievements } from "@/data/achievements";
 import {
@@ -19,8 +25,10 @@ import type {
   AlumniConnection,
   AlumniRecord,
   AlumniStory,
+  AlumniTestimonial,
   Announcement,
   ArchiveItem,
+  AssociationLeader,
   AuditLogEntry,
   BatchContribution,
   BatchRecord,
@@ -28,12 +36,14 @@ import type {
   EventRegistration,
   GalleryCategory,
   GalleryItem,
+  HeritageMilestone,
   MemberNotification,
   MentorProfile,
   MentorshipRequest,
   NewsletterSubscriber,
   NHEvent,
   SiteSettings,
+  SuperintendentRecord,
 } from "@/types";
 
 export interface LocalAuthUser {
@@ -69,6 +79,10 @@ export interface DemoStore {
   notifications: MemberNotification[];
   auditLogs: AuditLogEntry[];
   settings: SiteSettings;
+  superintendents: SuperintendentRecord[];
+  heritageMilestones: HeritageMilestone[];
+  testimonials: AlumniTestimonial[];
+  associationLeaders: AssociationLeader[];
 }
 
 export const DEMO_ADMIN_USER_ID = "user-admin-1";
@@ -162,6 +176,10 @@ function createStore(): DemoStore {
     notifications: structuredClone(sampleNotifications),
     auditLogs: structuredClone(sampleAuditLogs),
     settings: structuredClone(defaultSiteSettings),
+    superintendents: structuredClone(initialSuperintendents),
+    heritageMilestones: structuredClone(initialHeritageMilestones),
+    testimonials: structuredClone(initialTestimonials),
+    associationLeaders: structuredClone(initialAssociationLeaders),
   };
 }
 
@@ -169,7 +187,7 @@ const g = globalThis as unknown as { __newtonHouseStore?: DemoStore };
 
 export function store(): DemoStore {
   const s = g.__newtonHouseStore;
-  if (!s || !s.archiveItems || !s.stories || !s.mentors) {
+  if (!s || !s.archiveItems || !s.stories || !s.mentors || !s.superintendents) {
     g.__newtonHouseStore = createStore();
   }
   return g.__newtonHouseStore!;
